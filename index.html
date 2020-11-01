@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        body {
+            text-align: center;
+        }
+
+        #stage {
+            display: inline-block;
+            position: relative;
+            width: 500px;
+            height: 400px;
+            margin-top: 200px;
+            background-color: #000000;
+            overflow: hidden;
+        }
+
+        .sprite {
+            display: inline-block;
+            position: absolute;
+        }
+
+        #player {
+            width: 16px;
+            height: 16px;
+            background: url('images/plane.png');
+        }
+
+        .bullet {
+            width: 6px;
+            height: 6px;
+            border-radius: 5px;
+            border: 1px;
+            background: #ff0000;
+        }
+
+        #score {
+
+            color: white;
+            font-size: 25px;
+            padding: 5px;
+            z-index: 999;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="stage">
+        <div id="player" class="sprite"></div>
+        <div id="score" class="sprite">000</div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="js/soundmanager2-jsmin.js"></script>
+    <script>
+        soundManager.setup({
+            url: 'music/music.mp3',
+            flashVersion: 9, // optional: shiny features (default = 8)
+            // optional: ignore Flash where possible, use 100% HTML5 mode
+            // preferFlash: false,
+            onready: function () {
+                // Ready to use; 
+                soundManager.createSound({
+                    id: 'music'
+                });
+                soundManager.play('music');
+            }
+        });
+    </script>
+    <script>
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        ($(function () {
+            var body = $("body"),
+                stage = $("#stage"),
+                player = $("#player"),
+                score = $("#score"),
+                pSpeed = 5,
+                bSpeed = 5,
+                pXway = 0,
+                pYway = 0,
+                counter = 0;
+
+
+            bR = Math.sqrt(Math.pow(stage.width() / 2, 2) + Math.pow(stage.height() / 2, 2));
+            console.log(bR);
+            var Key = {
+                UP: 38,
+                DOWN: 40,
+                LEFT: 37,
+                RIGHT: 39
+            };
+            player.css("left", (stage.width() / 2 - player.width() / 2) + "px");
+            player.css("top", (stage.height() / 2 - player.height() / 2) + "px");
+            body.keydown(function (e) {
+                switch (e.which) {
+                    case Key.UP:
+                        pYway = -1;
+                        break;
+                    case Key.DOWN:
+                        pYway = 1;
+                        break;
+                    case Key.LEFT:
+                        pXway = -1;
+                        break;
+                    case Key.RIGHT:
+                        pXway = 1;
+                        break;
+                }
+            })
+            body.keyup(function (e) {
+                pXway = 0;
+                pYway = 0;
+            });
+            // 建立子彈
+            function createBullet() {
+                stage.append("<div class='sprite bullet'></div>");
+                var b = stage.find(".bullet:last");
+                var angle = getRandomInt(0, 359);
+                var bEndAngle = getRandomInt(angle + 90, angle + 270);
+                var bx = stage.width() / 2 + bR * Math.cos(Math.PI * angle / 180) - b.width() / 2;
+                var by = stage.height() / 2 + bR * Math.sin(Math.PI * angle / 180) - b.height() / 2;
+                b.data("xSpeed", bSpeed * Math.cos(Math.PI * bEndAngle / 180));
+                b.data("ySpeed", bSpeed * Math.sin(Math.PI * bEndAngle / 180));
+                b.css("left", bx + "px");
+                b.css("top", by + "px");
+            }
+            for (var i = 0; i < 50; i++) {
+                createBullet();
+            }
+
+            // 控制角色
+            var loop = setInterval(function () {
+                    // player動畫
+                    var xSpeed = 0,
+                        ySpeed = 0,
+                        x = parseInt(player.css("left")),
+                        y = parseInt(player.css("top"));
+
+                    if (pXway == -1 && pYway == 0) {
+                        xSpeed = pSpeed * pXway;
+                    }
+                    if (pXway == 0 && pYway == -1) {
+                        ySpeed = pSpeed * pYway;
+                    }
+                    if (pXway == 1 && pYway == 0) {
+                        xSpeed = pSpeed * pXway;
+                    }
+                    if (pXway == 0 && pYway == 1) {
+                        ySpeed = pSpeed * pYway;
+                    }
+                    if (pXway != 0 && pYway != 0) {
+                        xSpeed = pSpeed / Math.sqrt(2) * pXway;
+                        ySpeed = pSpeed / Math.sqrt(2) * pYway;
+                    }
+                    x = x + xSpeed;
+                    y = y + ySpeed;
+                    if (x < 0) {
+                        x = 0;
+                    }
+                    if (y < 0) {
+                        y = 0;
+                    }
+                    if (x > stage.width() - player.width()) {
+                        x = stage.width() - player.width();
+                    }
+                    if (y > stage.height() - player.height()) {
+                        y = stage.height() - player.height();
+                    }
+                    player.css("left", x + "px");
+                    player.css("top", y + "px");
+                    // 子彈移動動畫
+                    $('.bullet').each(function () {
+                        var bx = parseInt($(this).css("left")),
+                            by = parseInt($(this).css("top"))
+                        dist = Math.sqrt(Math.pow(stage.width() / 2 - (bx + $(this).width() / 2),
+                                2) +
+                            Math.pow(stage.height() / 2 - (by + $(this).height() / 2), 2));
+                        bx = Math.round(bx + $(this).data("xSpeed"));
+                        by = Math.round(by + $(this).data("ySpeed"));
+                        // console.log(bx, by);
+                        $(this).css("left", bx + "px");
+                        $(this).css("top", by);
+                        if ($(this).width() / 2 + bR < dist) {
+                            $(this).remove();
+                            createBullet();
+                        }
+                        //碰撞
+                        var pcx = parseInt(player.css("left")) + player.width() / 2;
+                        var pcy = parseInt(player.css("top")) + player.height() / 2;
+
+                        var playerBulletDist = Math.sqrt(Math.pow(pcx - (bx + $(this).width() / 2),
+                                2) + Math
+                            .pow(pcy - (by + $(this).height() / 2), 2));
+                        if ($(this).width() / 2 + player.width() / 2 > playerBulletDist) {
+                            clearInterval(loop);
+                        }
+                    });
+
+                    score.html(++counter);
+                },
+                1000 / 60);
+        }()))
+    </script>
+
+</body>
+
+</html>
