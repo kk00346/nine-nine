@@ -20,7 +20,6 @@
             position: relative;
             width: 500px;
             height: 400px;
-            margin-top: 200px;
             background-color: #000000;
             overflow: hidden;
         }
@@ -45,12 +44,30 @@
         }
 
         #score {
-
             color: white;
             font-size: 25px;
-            padding: 5px;
+            width: 200px;
+            height: 30px;
+            top: 0;
+            right: 0;
+            left: 0;
+            margin: auto;
             z-index: 999;
             text-align: center;
+        }
+
+        #comment {
+            visibility: hidden;
+            z-index: 10000;
+            font-size: 50px;
+            color: white;
+            width: 200px;
+            height: 30px;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            margin: auto;
         }
     </style>
 </head>
@@ -59,35 +76,33 @@
     <div id="stage">
         <div id="player" class="sprite"></div>
         <div id="score" class="sprite">000</div>
+        <div id="comment" class="sprite"></div>
+        <audio id="bgMusic">
+            <source src="music/music.mp3" type="audio/mp3">
+        </audio>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="js/soundmanager2-jsmin.js"></script>
     <script>
-        soundManager.setup({
-            url: 'music/music.mp3',
-            flashVersion: 9, // optional: shiny features (default = 8)
-            // optional: ignore Flash where possible, use 100% HTML5 mode
-            // preferFlash: false,
-            onready: function () {
-                // Ready to use; 
-                soundManager.createSound({
-                    id: 'music'
-                });
-                soundManager.play('music');
-            }
-        });
+
     </script>
     <script>
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
         ($(function () {
+            var audio = document.getElementById("bgMusic");
+
+            //播放(继续播放)
+            audio.play();
+
+            var keyRight, keyTop, keyLeft, keyDown;
             var body = $("body"),
                 stage = $("#stage"),
                 player = $("#player"),
                 score = $("#score"),
-                pSpeed = 5,
-                bSpeed = 5,
+                pSpeed = 3,
+                bSpeed = 3,
                 pXway = 0,
                 pYway = 0,
                 counter = 0;
@@ -107,21 +122,57 @@
                 switch (e.which) {
                     case Key.UP:
                         pYway = -1;
+                        keyRight = true;
                         break;
                     case Key.DOWN:
                         pYway = 1;
+                        keyDown = true;
                         break;
                     case Key.LEFT:
                         pXway = -1;
+                        keyLeft = true;
                         break;
                     case Key.RIGHT:
                         pXway = 1;
+                        keyRight = true;
                         break;
                 }
             })
             body.keyup(function (e) {
-                pXway = 0;
-                pYway = 0;
+                switch (e.which) {
+                    case Key.UP:
+                        if (keyDown) {
+                            pYway = 1;
+                        } else {
+                            pYway = 0;
+                        }
+                        keyRight = false;
+                        break;
+                    case Key.DOWN:
+                        if (keyTop) {
+                            pYway = -1;
+                        } else {
+                            pYway = 0;
+                        }
+                        keyDown = false;
+                        break;
+                    case Key.LEFT:
+                        if (keyRight) {
+                            pXway = 1;
+                        } else {
+                            pXway = 0;
+                        }
+                        keyLeft = false;
+                        break;
+                    case Key.RIGHT:
+                        if (keyLeft) {
+                            pXway = -1;
+                        } else {
+                            pXway = 0;
+                        }
+                        keyRight = false;
+                        break;
+                }
             });
             // 建立子彈
             function createBullet() {
@@ -136,7 +187,7 @@
                 b.css("left", bx + "px");
                 b.css("top", by + "px");
             }
-            for (var i = 0; i < 50; i++) {
+            for (var i = 0; i < 100; i++) {
                 createBullet();
             }
 
@@ -199,15 +250,20 @@
                         //碰撞
                         var pcx = parseInt(player.css("left")) + player.width() / 2;
                         var pcy = parseInt(player.css("top")) + player.height() / 2;
-
                         var playerBulletDist = Math.sqrt(Math.pow(pcx - (bx + $(this).width() / 2),
                                 2) + Math
                             .pow(pcy - (by + $(this).height() / 2), 2));
-                        if ($(this).width() / 2 + player.width() / 2 > playerBulletDist) {
+                        if (player.width() / 2 > playerBulletDist) {
                             clearInterval(loop);
+                            var text = "";
+                            $('#comment').css("visibility", "visible")
+                            $('#comment').html("廢物")
+                            audio.pause();
+                            audio.src = "music/die.mp3";
+                            audio.load();
+                            audio.play();
                         }
                     });
-
                     score.html(++counter);
                 },
                 1000 / 60);
