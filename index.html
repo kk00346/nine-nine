@@ -44,6 +44,7 @@
         }
 
         #score {
+            visibility: visible;
             color: white;
             font-size: 25px;
             width: 200px;
@@ -79,8 +80,8 @@
 <body>
     <div id="stage">
         <div id="player" class="sprite"></div>
-        <div id="score" class="sprite text">000</div>
-        <div id="comment" class="sprite"></div>
+        <div id="score" class="sprite">000</div>
+        <div id="comment" class="sprite text"></div>
         <div id="start" class="sprite text">點空白鍵開始</div>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -280,7 +281,7 @@
                                 audio.play();
                             }
                         });
-                        score.html(++counter);
+                        score.html(((++counter) * 60 / 1000).toFixed(2) + '秒');
                     },
                     1000 / 60);
             }
