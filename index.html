@@ -77,9 +77,6 @@
         <div id="player" class="sprite"></div>
         <div id="score" class="sprite">000</div>
         <div id="comment" class="sprite"></div>
-        <audio id="bgMusic">
-            <source src="music/music.mp3" type="audio/mp3">
-        </audio>
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="js/soundmanager2-jsmin.js"></script>
@@ -91,10 +88,15 @@
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
         ($(function () {
-            var audio = document.getElementById("bgMusic");
+            // var audio = document.getElementById("bgMusic");
 
-            //播放(继续播放)
-            audio.play();
+            var source = "music/music.mp3";
+            var audio = new Audio(); // use the constructor in JavaScript, just easier that way
+            audio.addEventListener("load", function () {
+                audio.play();
+            }, true);
+            audio.src = source;
+            audio.autoplay = true; // add this
 
             var keyRight, keyTop, keyLeft, keyDown;
             var body = $("body"),
@@ -261,7 +263,7 @@
                             audio.pause();
                             audio.src = "music/die.mp3";
                             audio.load();
-                            audio.play();
+                            // audio.play();
                         }
                     });
                     score.html(++counter);
