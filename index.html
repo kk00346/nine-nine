@@ -126,7 +126,12 @@
                 console.log(e.which);
                 switch (e.which) {
                     case Key.SPACE:
-                        gameStart();
+                        if (isStart) {
+                            gameRestart();
+                        } else {
+                            gameStart();
+                        }
+
                         break;
                     case Key.UP:
                         pYway = -1;
@@ -199,10 +204,57 @@
                 createBullet();
             }
 
+            function gameRestart() {
+                if (!isStart) {
+                    return;
+                }
+                counter = 0;
+                isStart = false;
+                console.log('iiii');
+                $('.bullet').remove();
+                for (var i = 0; i < 60; i++) {
+                    createBullet();
+                }
+                pXway = 0;
+                pYway = 0;
+                $('#comment').html("");
+                player.css("left", (stage.width() / 2 - player.width() / 2) + "px");
+                player.css("top", (stage.height() / 2 - player.height() / 2) + "px");
+                audio.pause();
+                audio.src = "music/music.mp3";
+                audio.load();
+                audio.play();
+                gameStart();
+
+            }
+
+            let gyroscope = new Gyroscope({
+                frequency: 60
+            });
+
+            gyroscope.addEventListener('reading', e => {
+                console.log("Angular velocity along the X-axis " + gyroscope.x);
+                console.log("Angular velocity along the Y-axis " + gyroscope.y);
+                console.log("Angular velocity along the Z-axis " + gyroscope.z);
+            });
+
+
+            function gameOver() {
+                var text = "";
+                $('#comment').css("visibility", "visible")
+                $('#comment').html("廢物<br>按空白再來拉")
+                audio.pause();
+                audio.src = "music/die.mp3";
+                audio.load();
+                audio.play();
+                gyroscope.stop();
+            }
+
             function gameStart() {
                 if (isStart) {
                     return;
                 }
+                gyroscope.start();
                 audio.play();
                 isStart = true;
                 $('#start').css("visibility", "hidden")
@@ -272,13 +324,7 @@
                                 .pow(pcy - (by + $(this).height() / 2), 2));
                             if (player.width() / 2 > playerBulletDist) {
                                 clearInterval(loop);
-                                var text = "";
-                                $('#comment').css("visibility", "visible")
-                                $('#comment').html("廢物")
-                                audio.pause();
-                                audio.src = "music/die.mp3";
-                                audio.load();
-                                audio.play();
+                                gameOver();
                             }
                         });
                         score.html(((++counter) * 60 / 1000).toFixed(2) + '秒');
